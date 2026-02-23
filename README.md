@@ -59,3 +59,5 @@ java -jar build/quarkus-app/quarkus-run.jar
 #Сборка в нативном режиме
 ./gradlew --no-daemon --build-cache build -x test -x spotlessJavaApply -x spotlessJava -Dquarkus.native.enabled=true -Dquarkus.native.remote-container-build=false -Dquarkus.package.jar.enabled=false
 ```
+
+Развёртывание в Kubernetes (Kind) и автомасштабирование по ответам 429 описаны в [KUBERNETES.md](KUBERNETES.md).
