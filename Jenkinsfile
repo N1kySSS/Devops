@@ -46,7 +46,7 @@ pipeline {
             docker buildx create \
               --name mybuilder \
               --driver docker-container \
-              --driver-opt network=infra \
+              --driver-opt network=infra_infra \
               --use \
               jenkinsctx
 
