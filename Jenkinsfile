@@ -37,17 +37,13 @@ pipeline {
             printf '%s' "$WRITER_PASS" | docker login "${REGISTRY_HOST}" -u writer --password-stdin
             rm -f "${WORKSPACE}/.docker-tls/issue.json"
             set -x
-            docker pull "${FULL_IMAGE}:buildcache" || true
             docker buildx build \
-              --cache-from "${FULL_IMAGE}:buildcache" \
+              --cache-from "type=registry,ref=${FULL_IMAGE}:buildcache" \
+              --cache-to "type=registry,ref=${FULL_IMAGE}:buildcache,mode=max" \
+              --push \
               -t "${FULL_IMAGE}:${BUILD_NUMBER}" \
               -t "${FULL_IMAGE}:latest" \
-              -t "${FULL_IMAGE}:buildcache" \
-              --load \
               .
-            docker push "${FULL_IMAGE}:${BUILD_NUMBER}"
-            docker push "${FULL_IMAGE}:latest"
-            docker push "${FULL_IMAGE}:buildcache"
           '''
         }
       }
