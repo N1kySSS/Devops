@@ -10,7 +10,7 @@ pipeline {
     VAULT_ADDR = 'http://vault:8200'
     DOCKER_HOST = 'tcp://dockerd:2376'
     DOCKER_TLS_VERIFY = '1'
-    DOCKER_BUILDKIT = '0'
+    DOCKER_BUILDKIT = '1'
     IMAGE_NAME = 'assignment5/quarkus-api'
     REGISTRY_HOST = 'registry-nginx:5444'
   }
@@ -38,11 +38,12 @@ pipeline {
             rm -f "${WORKSPACE}/.docker-tls/issue.json"
             set -x
             docker pull "${FULL_IMAGE}:buildcache" || true
-            docker build \
+            docker buildx build \
               --cache-from "${FULL_IMAGE}:buildcache" \
               -t "${FULL_IMAGE}:${BUILD_NUMBER}" \
               -t "${FULL_IMAGE}:latest" \
               -t "${FULL_IMAGE}:buildcache" \
+              --load \
               .
             docker push "${FULL_IMAGE}:${BUILD_NUMBER}"
             docker push "${FULL_IMAGE}:latest"
