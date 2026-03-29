@@ -37,6 +37,11 @@ pipeline {
             printf '%s' "$WRITER_PASS" | docker login "${REGISTRY_HOST}" -u writer --password-stdin
             rm -f "${WORKSPACE}/.docker-tls/issue.json"
             set -x
+            docker buildx create \
+              --name mybuilder \
+              --driver docker-container \
+              --driver-opt network=host \
+              --use || docker buildx use mybuilder
             docker buildx build \
               --cache-from "type=registry,ref=${FULL_IMAGE}:buildcache" \
               --cache-to "type=registry,ref=${FULL_IMAGE}:buildcache,mode=max" \
@@ -52,7 +57,10 @@ pipeline {
 
   post {
     always {
-      sh 'rm -rf "${WORKSPACE}/.docker-tls" || true'
+      sh '''
+        rm -rf "${WORKSPACE}/.docker-tls" || true
+        docker buildx rm mybuilder || true
+      '''
     }
   }
 }
