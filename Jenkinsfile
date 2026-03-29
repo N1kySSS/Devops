@@ -8,8 +8,6 @@ pipeline {
 
   environment {
     VAULT_ADDR = 'http://vault:8200'
-    DOCKER_HOST = 'tcp://dockerd:2376'
-    DOCKER_TLS_VERIFY = '1'
     DOCKER_BUILDKIT = '1'
     IMAGE_NAME = 'assignment5/quarkus-api'
     REGISTRY_HOST = 'registry-nginx:5444'
@@ -31,17 +29,29 @@ pipeline {
             jq -r '.data.private_key' "${WORKSPACE}/.docker-tls/issue.json" > "${WORKSPACE}/.docker-tls/key.pem"
             jq -r '.data.issuing_ca' "${WORKSPACE}/.docker-tls/issue.json" > "${WORKSPACE}/.docker-tls/ca.pem"
             chmod 600 "${WORKSPACE}/.docker-tls/key.pem"
-            export DOCKER_CERT_PATH="${WORKSPACE}/.docker-tls"
+            rm -f "${WORKSPACE}/.docker-tls/issue.json"
+
             export FULL_IMAGE="${REGISTRY_HOST}/${IMAGE_NAME}"
             WRITER_PASS=$(vault kv get -field=writer_password secret/registry/auth)
-            printf '%s' "$WRITER_PASS" | docker login "${REGISTRY_HOST}" -u writer --password-stdin
-            rm -f "${WORKSPACE}/.docker-tls/issue.json"
+
+            # Создаём docker context с mTLS
+            docker context rm jenkinsctx 2>/dev/null || true
+            docker context create jenkinsctx \
+              --docker "host=tcp://dockerd:2376,ca=${WORKSPACE}/.docker-tls/ca.pem,cert=${WORKSPACE}/.docker-tls/cert.pem,key=${WORKSPACE}/.docker-tls/key.pem"
+
+            # Логин через context
+            printf '%s' "$WRITER_PASS" | docker --context jenkinsctx login "${REGISTRY_HOST}" -u writer --password-stdin
+
             set -x
+
+            # Создаём buildx builder на основе context
+            docker buildx rm mybuilder 2>/dev/null || true
             docker buildx create \
               --name mybuilder \
               --driver docker-container \
-              --driver-opt network=host \
-              --use || docker buildx use mybuilder
+              --context jenkinsctx \
+              --use
+
             docker buildx build \
               --cache-from "type=registry,ref=${FULL_IMAGE}:buildcache" \
               --cache-to "type=registry,ref=${FULL_IMAGE}:buildcache,mode=max" \
@@ -58,8 +68,9 @@ pipeline {
   post {
     always {
       sh '''
+        docker buildx rm mybuilder 2>/dev/null || true
+        docker context rm jenkinsctx 2>/dev/null || true
         rm -rf "${WORKSPACE}/.docker-tls" || true
-        docker buildx rm mybuilder || true
       '''
     }
   }
