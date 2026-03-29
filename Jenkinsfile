@@ -41,18 +41,13 @@ pipeline {
             printf '%s' "$WRITER_PASS" | docker --context jenkinsctx login "${REGISTRY_HOST}" -u writer --password-stdin
 
             set -x
-
             docker buildx rm mybuilder 2>/dev/null || true
             docker buildx create \
               --name mybuilder \
               --driver docker-container \
-              --driver-opt network=infra_infra \
               --use \
               jenkinsctx
-
             docker buildx build \
-              --cache-from "type=registry,ref=${FULL_IMAGE}:buildcache" \
-              --cache-to "type=registry,ref=${FULL_IMAGE}:buildcache,mode=max" \
               --push \
               -t "${FULL_IMAGE}:${BUILD_NUMBER}" \
               -t "${FULL_IMAGE}:latest" \
@@ -66,7 +61,6 @@ pipeline {
   post {
     always {
       sh '''
-        docker buildx rm mybuilder 2>/dev/null || true
         docker context rm jenkinsctx 2>/dev/null || true
         rm -rf "${WORKSPACE}/.docker-tls" || true
       '''
