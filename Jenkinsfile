@@ -49,8 +49,8 @@ pipeline {
             docker buildx create \
               --name mybuilder \
               --driver docker-container \
-              --context jenkinsctx \
-              --use
+              --use \
+              jenkinsctx
 
             docker buildx build \
               --cache-from "type=registry,ref=${FULL_IMAGE}:buildcache" \
