@@ -48,3 +48,10 @@ load-tester/load_test_report_*.txt
 
 # OS
 Thumbs.db
+
+# Задание 5 — сгенерированные секреты (infra)
+infra/generated.env
+
+# Разрешить инфраструктурные Dockerfile в infra (корневой .gitignore игнорирует имя Dockerfile)
+!infra/jenkins/Dockerfile
+!infra/bootstrap/Dockerfile.bootstrap

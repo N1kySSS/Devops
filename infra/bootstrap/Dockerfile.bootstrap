@@ -1,0 +1,18 @@
+# TARGETARCH задаётся BuildKit (amd64 / arm64) — не хардкодить linux_amd64.
+FROM alpine:3.19
+
+ARG TARGETARCH=amd64
+ARG VAULT_VERSION=1.17.0
+
+RUN apk add --no-cache bash curl jq apache2-utils openssl ca-certificates unzip \
+  && wget -q "https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_${TARGETARCH}.zip" -O /tmp/vault.zip \
+  && unzip /tmp/vault.zip -d /usr/local/bin \
+  && rm /tmp/vault.zip \
+  && chmod +x /usr/local/bin/vault
+
+COPY bootstrap.sh /bootstrap.sh
+COPY auth-sync.sh /auth-sync.sh
+RUN chmod +x /bootstrap.sh /auth-sync.sh
+
+ENTRYPOINT ["/bootstrap.sh"]
+CMD []

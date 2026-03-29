@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: work-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: work-api
+  template:
+    metadata:
+      labels:
+        app: work-api
+    spec:
+      containers:
+      - name: work-api
+        image: work-api-native
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: APP_API_LIMIT
+          value: "400"
+        - name: APP_API_TIMEOUT
+          value: "7000"

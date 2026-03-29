@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adapter-config
+  namespace: monitoring
+data:
+  config.yaml: |
+    rules:
+      default: true
+      custom:
+        - seriesQuery: 'work_active_requests{namespace!="",pod!=""}'
+          resources:
+            overrides:
+              namespace: {resource: "namespace"}
+              pod: {resource: "pod"}
+          name:
+            matches: "work_active_requests"
+            as: "work_active_requests"
+          metricsQuery: ceil(work_active_requests{<<. LabelMatchers>>}) •

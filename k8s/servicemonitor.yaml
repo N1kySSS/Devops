@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: work-api-monitor
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: work-api
+  endpoints:
+  - port: http
+    path: /q/metrics
+    interval: 1s
