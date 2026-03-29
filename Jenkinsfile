@@ -39,8 +39,6 @@ pipeline {
             set -x
             docker pull "${FULL_IMAGE}:buildcache" || true
             docker build \
-              --progress=plain \
-              --build-arg BUILDKIT_INLINE_CACHE=1 \
               --cache-from "${FULL_IMAGE}:buildcache" \
               -t "${FULL_IMAGE}:${BUILD_NUMBER}" \
               -t "${FULL_IMAGE}:latest" \
