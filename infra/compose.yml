@@ -83,6 +83,9 @@ services:
   dockerd:
     image: docker:27-dind
     privileged: true
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       DOCKER_TLS_CERTDIR: ""
     entrypoint:
